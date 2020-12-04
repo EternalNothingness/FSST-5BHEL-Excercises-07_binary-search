@@ -62,35 +62,60 @@ void *load_buffer(const char *filename, int n_Byte)
 	return buf;
 }
 
-char *binary_search(const char *str2find, char *search_index[100], int min, int max)
+char *binary_search(const char *str2find, char** min, char** max)
 {
-	if(*search_index[(max+min)/2]<*str2find)
+	if(min>max) {printf("-- Fatal Error: min > max --\n"); return NULL;}
+	char **mid;
+	mid = max-(max-min)/2;
+
+	if(strcmp(str2find, *mid) < 0)
 	{
-		if(max=min) return NULL;
-		max=(max+min)/2;
-		binary_search(str2find, search_index, min, max);
-		
+		if(max == min) return NULL;
+		max = mid-1;
+		return binary_search(str2find, min, max);
 	}
 	else
 	{
-		if(*search_index[(max+min)/2]>*str2find)
+		if(strcmp(str2find, *mid) > 0)
 		{
-			if(max=min) return NULL;
-			min=(max+min)/2;
-			binary_search(str2find, search_index, min, max);
+			if(max == min) return NULL;
+			min = mid; // nicht +1, weil ansonsten Gefahr, dass min > max wird!!!
+			return binary_search(str2find, min, max);
 		}
-		else
+		else return *mid;
+	}
+}
+
+char *linear_search(const char *str2find, char **search_index, char **max)
+{
+	for(; search_index <= max; ++search_index)
+	{
+		if(strcmp(str2find, *search_index) <= 0)
 		{
-			return search_index[max+min/2];
+			if(strcmp(str2find, *search_index) == 0) return *search_index;
+			else break;
 		}
 	}
+	return NULL;
+	/*
+	if(search_index > max) return NULL;
+	if(strcmp(str2find, *search_index) > 0)
+	{
+		return linear_search(str2find, ++search_index, max);
+	}
+	else
+	{
+		if(strcmp(str2find, *search_index) < 0) return NULL;
+		else return *search_index;
+	}
+	*/
 }
 
 void *search(const char *str2find)
 {
-	int n = 0;
+	int n_words = 0;
 	char *buf;
-	char *buf_temp;
+	char *buf_start;
 	char **search_index;
 	char **search_index_start;
 
@@ -100,28 +125,34 @@ void *search(const char *str2find)
 	buf = load_buffer("wortbuffer", n_Byte);
 	if(buf == NULL) return NULL;
 
-	for(buf_temp = buf; (buf_temp - buf) < n_Byte; buf_temp++)
+	for(buf_start = buf; (buf - buf_start) < n_Byte; buf++)
 	{
-		if (*buf_temp == 0) n++;
-		//printf("%c", *buf_temp);
+		if (*buf == 0) n_words++;
 	}
-	printf("Anzahl Worte: %i\n", n);
+	printf("Anzahl Worte: %i\n", n_words);
 
-	search_index=malloc(n*sizeof(char*));
+	search_index=malloc(n_words*sizeof(char*));
 	search_index_start = search_index;
-	*search_index = buf;
-	search_index++;
-	for(buf_temp = buf; (buf_temp - buf) < n_Byte; buf_temp++)
+	*search_index = buf_start;
+	for(buf = buf_start; (buf - buf_start) < n_Byte; buf++)
 	{
-		if (*buf_temp == 0) 
+		if (*buf == 0) 
 		{
-			*search_index = buf_temp+1;
-			search_index++;
+			if(buf+1 == 0) break;
+			*(++search_index) = buf+1;
 		}
 	}
-	printf("%s\n", *search_index_start);
-	return NULL;
-	
+	printf("Erstes Wort: %s\n", *search_index_start);
+	printf("Letztes Wort: %s\n", *(search_index-1));
+	char** search_index_end = search_index-1;
+	for(search_index = search_index_start; search_index < search_index_start+n_words; search_index++)
+	{
+		binary_search(*search_index, search_index_start, search_index_end);
+		binary_search(*search_index+1, search_index_start, search_index_end);
+		binary_search(*search_index-1, search_index_start, search_index_end);
+	}
+	//return linear_search(str2find, search_index_start, search_index-1);
+	return binary_search(str2find, search_index_start, search_index_end);
 }
 
 int main()
