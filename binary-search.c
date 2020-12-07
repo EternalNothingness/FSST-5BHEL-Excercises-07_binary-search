@@ -150,34 +150,7 @@ char **setup_search_index(char *buf, int n_Byte,  int n_words)
 	}
 	return search_index_start; //Rueckgabe der Adresse des ersten Pointers der Pointerfolge
 }
-char **setup_search(void)
-{
-	char **RETURN_FAILURE = NULL;
 
-	int n_Byte = size_of_file("wortbuffer");
-	if(n_Byte == -1) return RETURN_FAILURE;
-	char *buf = create_buffer("wortbuffer", n_Byte);
-	if(buf == NULL) return RETURN_FAILURE;
-
-	int n_words = count_words(buf, n_Byte);
-
-	char **search_index = setup_search_index(buf, n_Byte, n_words);
-	return search_index;
-}
-
-char **find_search_index_end(char **search_index)
-{
-	char **RETURN_FAILURE = NULL;
-
-	int n_Byte = size_of_file("wortbuffer");
-	if(n_Byte == -1) return RETURN_FAILURE;
-	char *buf = create_buffer("wortbuffer", n_Byte);
-	if(buf == NULL) return RETURN_FAILURE;
-
-	int n_words = count_words(buf, n_Byte);
-	char **search_index_end = search_index+n_words-1;
-	return search_index_end;
-}
 // -- Funktion char *binary_search --
 // Parameter:
 //	* const char *str2find ... zu suchende Zeichenfolge
@@ -250,54 +223,28 @@ char *linear_search(const char *str2find, char **search_index, char **max)
 	return RETURN_FAILURE;
 }
 
-void *search(const char *str2find)
+int setup_search(char *filename, char ***search_index_start, char ***search_index_end)
 {
-	void *RETURN_FAILURE = NULL;
-
-	int n_words = 0;
-	char *buf;
-	char *buf_start;
-	char **search_index;
-	char **search_index_start;
+	int RETURN_FAILURE = -1;
+	int RETURN_SUCCESS = 0;
 
 	int n_Byte = size_of_file("wortbuffer");
-	printf("Anzahl Bytes: %i\n", n_Byte);
-	if(n_Byte == -1) return RETURN_FAILURE;
-	buf = create_buffer("wortbuffer", n_Byte);
-	if(buf == NULL) return RETURN_FAILURE;
-
-	for(buf_start = buf; (buf - buf_start) < n_Byte; buf++)
-	{
-		if (*buf == 0) n_words++;
-	}
-	printf("Anzahl Worte: %i\n", n_words);
-
-	search_index=malloc(n_words*sizeof(char*));
-	search_index_start = search_index;
-	*search_index = buf_start;
-	for(buf = buf_start; (buf - buf_start) < n_Byte; buf++)
-	{
-		if (*buf == 0) 
-		{
-			if(buf+1 == 0) break;
-			*(++search_index) = buf+1;
-		}
-	}
-	printf("Erstes Wort: %s\n", *search_index_start);
-	printf("Letztes Wort: %s\n", *(search_index-1));
-	char** search_index_end = search_index-1;
-	for(search_index = search_index_start; search_index < search_index_start+n_words; search_index++)
-	{
-		binary_search(*search_index, search_index_start, search_index_end);
-		binary_search(*search_index+1, search_index_start, search_index_end);
-		binary_search(*search_index-1, search_index_start, search_index_end);
-	}
-	//return linear_search(str2find, search_index_start, search_index-1);
-	return binary_search(str2find, search_index_start, search_index_end);
+	char *buf = create_buffer("wortbuffer", n_Byte);
+	int n_words = count_words(buf, n_Byte);
+	*search_index_start = setup_search_index(buf, n_Byte, n_words);
+	if(search_index_start == NULL) return RETURN_FAILURE;
+	*search_index_end = *search_index_start + n_words - 1;
+	return RETURN_SUCCESS;
 }
 
 int main()
 {
+	int RETURN_FAILURE = -1;
+
+	char **search_index_start;
+	char **search_index_end;
+
+	if(setup_search("wortbuffer", &search_index_start, &search_index_end) != 0) return RETURN_FAILURE;
 	for (;;)
 	{
 		char input[100];
@@ -309,14 +256,10 @@ int main()
 
 		struct timeval tv_begin, tv_end, tv_diff;
 
-		char **search_index_start = setup_search();
-		char **search_index_end = find_search_index_end(search_index_start);
 		gettimeofday(&tv_begin, NULL);
 		void *res = binary_search(input, search_index_start, search_index_end);
-		//void *res = linear_search(input, search_index_start, search_index_end);
-		//void *res = search(input);
 		gettimeofday(&tv_end, NULL);
-
+		//void *res = linear_search(input, search_index_start, search_index_end);
 		timersub(&tv_end, &tv_begin, &tv_diff);
 
 		if (res != NULL) {
