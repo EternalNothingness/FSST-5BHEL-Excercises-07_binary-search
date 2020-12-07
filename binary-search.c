@@ -154,8 +154,8 @@ char **setup_search_index(char *buf, int n_Byte,  int n_words)
 // -- Funktion char *binary_search --
 // Parameter:
 //	* const char *str2find ... zu suchende Zeichenfolge
-//	* char** min ... 
-//	* char** max ... 
+//	* char** min ... "kleinstmoegliches" Wort
+//	* char** max ... "groesstmoeglichstes" Wort
 // Beschreibung: binary_search sucht die Zeichenfolge str2find im Buffer gemaess dem Prinzip
 // der binaeren Suche, d. h. dass sie str2find mit jenem Wort vergleicht, welches sich mittig
 // zwischen min und max befindet. Sollte str2find gleich diesem sein, so wird diese als
@@ -199,8 +199,8 @@ char *binary_search(const char *str2find, char** min, char** max)
 // -- Funktion char *linear_search --
 // Parameter:
 //	* const char *str2find ... zu suchende Zeichenfolge
-//	* char** min ... 
-//	* char** max ... 
+//	* char** min ... "kleinstmoegliches" Wort
+//	* char** max ... "groesstmoeglichstes" Wort
 // Beschreibung: linear_search sucht str2find gemaess dem Prinzip der linearen Suche, d. h.,
 // dass str2find zunaechst mit dem ersten Wort verglichen wird; bei Uebereinstimmung wird die
 // entsprechende Zeichenfolge ausgeben, ansonsten wird str2find mit dem naechsten Wort verglichen,
@@ -223,7 +223,19 @@ char *linear_search(const char *str2find, char **search_index, char **max)
 	return RETURN_FAILURE;
 }
 
-int setup_search(char *filename, char ***search_index_start, char ***search_index_end)
+// -- Funktion int setup_search --
+// Parameter:
+//	* const char *filename ... Dateiname des Wortbuffers
+//	* char*** search_index_start ... Adresse des Pointers **search_index_start
+//	* char*** search_index_end ... Adresse des Pointers **search_index_end
+// Beschreibung: setup_search erstellt unter Verwendung der oben beschriebenen Funktkionen den
+// Buffer, in welchem die Daten der Wortbuffer-Datei eingelesen werden, baut einen Suchindex
+// auf und schreibt den Anfang als auch das Ende des Suchindexes in durch die uebergebenen
+// Parameter search_index_start und search_index_end bestimmten Speicherorte
+// Rueckgabewert:
+//	* 0: kein Fehler aufgetreten
+//	* -1: Fehler aufgetreten
+int setup_search(const char *filename, char ***search_index_start, char ***search_index_end)
 {
 	int RETURN_FAILURE = -1;
 	int RETURN_SUCCESS = 0;
