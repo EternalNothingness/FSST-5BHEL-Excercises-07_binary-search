@@ -1,7 +1,12 @@
 /*
 Titel: binary_search
-Beschreibung:
+Beschreibung: Dieses Programm sucht ein vom Benutzer eingegebenes Wort in einem Buffer und gibt
+gibt dann auf der Konsole aus, ob dieses gefunden wurde und wie lange fuer die Suche gebraucht
+wurde. Dabei werden die Algorithmen binaere Suche und lineare Suche verglichen. Die Daten,
+welche der Wortbuffer enthaelt, werden von der Datei "wortbuffer" eingelesen, daraus wird
+mithilfe eines Pointers auf eine Pointerfolge ein Suchindex aufgebaut.
 Autor: Patrick Wintner
+GitHub: https://github.com/EternalNothingness/FSST-5BHEL-Excercises-07_binary-search.git
 Datum der letzten Bearbeitung: 07.12.2020
 */
 
@@ -290,6 +295,7 @@ void cmp_bin_lin(char **search_index_start, char** search_index_end)
 	printf(" average time binary search: %ld seconds %ld microseconds\n", tv_sum_bin.tv_sec/((search_index_end-search_index_start)/100), tv_sum_bin.tv_usec/((search_index_end-search_index_start)/100));
 	printf(" average time linear search: %ld seconds %ld microseconds\n", tv_sum_lin.tv_sec/((search_index_end-search_index_start)/100), tv_sum_lin.tv_usec/((search_index_end-search_index_start)/100));
 }
+
 int main()
 {
 	int RETURN_FAILURE = -1;
