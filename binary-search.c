@@ -249,6 +249,47 @@ int setup_search(const char *filename, char ***search_index_start, char ***searc
 	return RETURN_SUCCESS;
 }
 
+// -- Funktion void cmp_bin_lin --
+// Parameter:
+//	* char** search_index_start ... Start des Suchindexes
+//	* char** search_index_end ... Ende des Suchindexes
+// Beschreibung: cmp_bin_lin dient dem Vergleich der durchschnittlichen Dauer der
+// binaeren Suche mit der der linearen Suche und gibt die Ergebnisse auf der Konsole aus.
+// Rueckgabewert: -
+void cmp_bin_lin(char **search_index_start, char** search_index_end)
+{
+	struct timeval tv_begin_bin, tv_end_bin, tv_diff_bin, tv_sum_bin; // timeval-Konstrukt fuer binaere Suche
+	struct timeval tv_begin_lin, tv_end_lin, tv_diff_lin, tv_sum_lin; // timeval-Konstrukt fuer lineare Suche
+
+	// Initialisierung der Variablen
+	tv_sum_bin.tv_sec = 0;
+	tv_sum_bin.tv_usec = 0;
+	tv_sum_lin.tv_sec = 0;
+	tv_sum_lin.tv_usec = 0;
+
+	printf("Comparison of binary and linear search has started, please wait...\n");
+	for(char **search_index = search_index_start; search_index < search_index_end; search_index+=100)
+	// Da sich ueber 300.000 Worte im Wortbuffer befinden, wird zur Berechnung der durchschnittlichen
+	// Dauer nur jedes hundertste Wort herangezogen, wodurch etwa 3.000 Tests durchgefuehrt werden
+	{
+		gettimeofday(&tv_begin_bin, NULL);
+		void *res_bin = binary_search(*search_index, search_index_start, search_index_end);
+		gettimeofday(&tv_end_bin, NULL);
+		timersub(&tv_end_bin, &tv_begin_bin, &tv_diff_bin); // Berechnung der Dauer
+		tv_sum_bin.tv_sec += tv_diff_bin.tv_sec; // Aufsummierung der Messergebnisse
+		tv_sum_bin.tv_usec += tv_diff_bin.tv_usec;
+
+		gettimeofday(&tv_begin_lin, NULL);
+		void *res_lin = linear_search(*search_index, search_index_start, search_index_end);
+		gettimeofday(&tv_end_lin, NULL);
+		timersub(&tv_end_lin, &tv_begin_lin, &tv_diff_lin); // Berechnung der Dauer
+		tv_sum_lin.tv_sec += tv_diff_lin.tv_sec; // Aufsummierung der Messergebnisse
+		tv_sum_lin.tv_usec += tv_diff_lin.tv_usec; 
+	}
+	// Berechnung der durchschnittlichen Dauer und Ausgabe auf der Konsole
+	printf(" average time binary search: %ld seconds %ld microseconds\n", tv_sum_bin.tv_sec/((search_index_end-search_index_start)/100), tv_sum_bin.tv_usec/((search_index_end-search_index_start)/100));
+	printf(" average time linear search: %ld seconds %ld microseconds\n", tv_sum_lin.tv_sec/((search_index_end-search_index_start)/100), tv_sum_lin.tv_usec/((search_index_end-search_index_start)/100));
+}
 int main()
 {
 	int RETURN_FAILURE = -1;
@@ -257,6 +298,7 @@ int main()
 	char **search_index_end;
 
 	if(setup_search("wortbuffer", &search_index_start, &search_index_end) != 0) return RETURN_FAILURE;
+	cmp_bin_lin(search_index_start, search_index_end);
 	for (;;)
 	{
 		char input[100];
@@ -266,19 +308,31 @@ int main()
 
 		if (!strlen(input)) break;
 
-		struct timeval tv_begin, tv_end, tv_diff;
+		struct timeval tv_begin_bin, tv_end_bin, tv_diff_bin;
+		struct timeval tv_begin_lin, tv_end_lin, tv_diff_lin;
 
-		gettimeofday(&tv_begin, NULL);
-		void *res = binary_search(input, search_index_start, search_index_end);
-		gettimeofday(&tv_end, NULL);
-		//void *res = linear_search(input, search_index_start, search_index_end);
-		timersub(&tv_end, &tv_begin, &tv_diff);
+		gettimeofday(&tv_begin_bin, NULL);
+		void *res_bin = binary_search(input, search_index_start, search_index_end);
+		gettimeofday(&tv_end_bin, NULL);
+		timersub(&tv_end_bin, &tv_begin_bin, &tv_diff_bin);
 
-		if (res != NULL) {
+		gettimeofday(&tv_begin_lin, NULL);
+		void *res_lin = linear_search(input, search_index_start, search_index_end);
+		gettimeofday(&tv_end_lin, NULL);
+		timersub(&tv_end_lin, &tv_begin_lin, &tv_diff_lin);
+
+		if (res_bin != NULL) {
 		printf("found");
 		} else {
 		printf("not found");
 		}
-		printf(" in (%ld seconds %ld microseconds)\n", tv_diff.tv_sec, tv_diff.tv_usec);
+		printf(" in (%ld seconds %ld microseconds)(binary)\n", tv_diff_bin.tv_sec, tv_diff_bin.tv_usec);
+		
+		if (res_lin != NULL) {
+		printf("found");
+		} else {
+		printf("not found");
+		}
+		printf(" in (%ld seconds %ld microseconds)(linear)\n", tv_diff_lin.tv_sec, tv_diff_lin.tv_usec);
 	}
 }
